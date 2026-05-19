@@ -1,0 +1,79 @@
+{
+  "name": "VoiceAgent Webpage Scraper",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "scrape",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "2b834bb4-dcd7-4ebc-bc5d-6e8cf650b8eb",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.body.url }}",
+        "responseFormat": "text",
+        "options": {}
+      },
+      "id": "e67bfd9d-e35b-4c4c-81bc-cf1bb39e2365",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        470,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $json.text || $json.data || \"\";\n\n// Basic HTML tag stripping\nlet cleanText = html\n  .replace(/<script\\b[^<]*(?:(?!<\\/script>)<[^<]*)*<\\/script>/gi, '')\n  .replace(/<style\\b[^<]*(?:(?!<\\/style>)<[^<]*)*<\\/style>/gi, '')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim();\n\nreturn {\n  text: cleanText,\n  url: $('Webhook').item.json.body.url\n};"
+      },
+      "id": "d0fa19a9-3dfa-45c1-90a6-5fae6d3c8cfa",
+      "name": "Clean Scraped Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        690,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Clean Scraped Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1e2f3d4c-5b6a-7b8c-9d0e-1f2a3b4c5d6e",
+  "id": "voiceagent-scraper-wf"
+}
