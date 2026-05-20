@@ -52,8 +52,6 @@ services:
   - type: web
     runtime: static
     name: voiceagent-ui
-    region: oregon
-    plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
