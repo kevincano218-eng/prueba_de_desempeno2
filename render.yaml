@@ -1,0 +1,61 @@
+services:
+  # ============================================================================
+  # Backend — FastAPI (Python Web Service)
+  # ============================================================================
+  - type: web
+    name: voiceagent-api
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      # --- LLM (OpenAI) ---
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: OPENAI_TTS_VOICE
+        value: nova
+
+      # --- TTS primario (ElevenLabs, opcional) ---
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: ELEVENLABS_VOICE_ID
+        value: 21m00Tcm4TlvDq8ikWAM
+
+      # --- Tool: Web Search (opcional, fallback a DuckDuckGo) ---
+      - key: TAVILY_API_KEY
+        sync: false
+
+      # --- Tool: Clima (opcional, fallback a Open-Meteo) ---
+      - key: OPENWEATHER_API_KEY
+        sync: false
+
+      # --- RAG (opcional — si no se usa, dejar vacío) ---
+      - key: RAG_SOURCE_URL
+        value: ""
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+
+      # --- n8n webhook (opcional) ---
+      - key: N8N_WEBHOOK_URL
+        sync: false
+
+  # ============================================================================
+  # Frontend — React + Vite (Static Site)
+  # ============================================================================
+  - type: static_site
+    name: voiceagent-ui
+    region: oregon
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://voiceagent-api.onrender.com
