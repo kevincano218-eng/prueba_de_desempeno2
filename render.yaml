@@ -59,4 +59,4 @@ services:
     staticPublishPath: ./dist
     envVars:
       - key: VITE_API_URL
-        value: https://voiceagent-api.onrender.com
+        value: https://voiceagent-api-ksl0.onrender.com
