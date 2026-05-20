@@ -20,11 +20,9 @@ _rag_initialized = False
 
 
 def _get_embeddings():
-    from langchain_community.embeddings import HuggingFaceEmbeddings
-    return HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2",
-        model_kwargs={"device": "cpu"},
-    )
+    from langchain_openai import OpenAIEmbeddings
+    # OpenAI Embeddings take almost 0 RAM (API call) instead of 400MB+ for local models.
+    return OpenAIEmbeddings(model="text-embedding-3-small")
 
 def _get_supabase_client():
     from supabase.client import Client, create_client
