@@ -49,7 +49,7 @@ services:
   # ============================================================================
   # Frontend — React + Vite (Static Site)
   # ============================================================================
-  - type: static_site
+  - type: static
     name: voiceagent-ui
     region: oregon
     plan: free
