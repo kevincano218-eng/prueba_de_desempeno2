@@ -51,7 +51,7 @@ export function MessageBubble({ message }) {
       {/* Message bubble */}
       <div
         style={{
-          maxWidth: '78%',
+          maxWidth: 'var(--bubble-max-w)',
           padding: isUser ? '10px 16px' : '12px 16px',
           borderRadius: isUser ? '14px 14px 4px 14px' : '4px 14px 14px 14px',
           background: isUser

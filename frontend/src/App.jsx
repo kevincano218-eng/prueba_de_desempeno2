@@ -135,7 +135,7 @@ export default function App() {
               ? <Wifi size={13} color="var(--green)" />
               : <WifiOff size={13} color="var(--red)" />
             }
-            <span style={{ fontSize: 11, color: online ? 'var(--green)' : 'var(--red)' }}>
+            <span className="hide-label-mobile" style={{ fontSize: 11, color: online ? 'var(--green)' : 'var(--red)' }}>
               {online ? 'connected' : 'offline'}
             </span>
           </div>
@@ -261,7 +261,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '16px 24px',
+    padding: 'var(--pad-h) var(--pad-w)',
     borderBottom: '1px solid var(--border)',
     background: 'rgba(10,10,15,0.85)',
     backdropFilter: 'blur(12px)',
@@ -273,6 +273,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: 12,
+    minWidth: 0,
   },
   logoMark: {
     width: 38,
@@ -283,6 +284,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   logoText: {
     fontFamily: 'var(--font-display)',
@@ -290,17 +292,20 @@ const styles = {
     fontWeight: 700,
     color: 'var(--text-1)',
     letterSpacing: '-0.02em',
+    whiteSpace: 'nowrap',
   },
   logoSub: {
     fontSize: 10,
     color: 'var(--text-3)',
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
+    whiteSpace: 'nowrap',
   },
   headerRight: {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
+    gap: 'var(--header-gap)',
+    flexShrink: 0,
   },
   iconBtn: {
     display: 'flex',
@@ -324,8 +329,8 @@ const styles = {
   messagesInner: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 20,
-    padding: '24px',
+    gap: 'var(--msg-gap)',
+    padding: 'var(--pad-w)',
     minHeight: '100%',
   },
   errorBox: {
@@ -338,10 +343,11 @@ const styles = {
     borderTop: '1px solid var(--border)',
     background: 'rgba(10,10,15,0.9)',
     backdropFilter: 'blur(12px)',
-    padding: '16px 24px',
+    padding: 'var(--pad-h) var(--pad-w)',
     position: 'sticky',
     bottom: 0,
     zIndex: 10,
+    paddingBottom: 'max(var(--pad-h), env(safe-area-inset-bottom, 0px))',
   },
   inputRow: {
     display: 'flex',

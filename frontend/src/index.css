@@ -24,6 +24,27 @@
   --font-mono:    'DM Mono', monospace;
   --radius:    12px;
   --radius-sm: 6px;
+
+  /* Responsive layout vars (desktop-first) */
+  --pad-w: 24px;
+  --pad-h: 16px;
+  --msg-gap: 20px;
+  --bubble-max-w: 78%;
+  --header-gap: 12px;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --pad-w: 12px;
+    --pad-h: 10px;
+    --msg-gap: 14px;
+    --bubble-max-w: 90%;
+    --header-gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hide-label-mobile { display: none; }
 }
 
 html, body, #root {

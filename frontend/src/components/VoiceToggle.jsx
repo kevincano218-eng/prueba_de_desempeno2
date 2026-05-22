@@ -52,7 +52,7 @@ function ToggleOption({ active, onClick, icon, label }) {
       }}
     >
       {icon}
-      {label}
+      <span className="hide-label-mobile">{label}</span>
     </button>
   )
 }
