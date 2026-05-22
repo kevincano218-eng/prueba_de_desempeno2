@@ -20,27 +20,27 @@ def get_weather_keyless(city: str) -> str:
         geo_resp = requests.get(geocode_url, timeout=8)
         geo_resp.raise_for_status()
         geo_data = geo_resp.json()
-        
+
         if not geo_data.get("results"):
             return f"City '{city}' not found. Please check the spelling."
-            
+
         loc = geo_data["results"][0]
         lat = loc["latitude"]
         lon = loc["longitude"]
         name = loc.get("name", city)
         country = loc.get("country", "")
-        
+
         # Step 2: Get current weather
         weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true"
         w_resp = requests.get(weather_url, timeout=8)
         w_resp.raise_for_status()
         w_data = w_resp.json()
-        
+
         current = w_data.get("current_weather", {})
         temp = current.get("temperature", "N/A")
         wind_speed = current.get("windspeed", "N/A")
         weathercode = current.get("weathercode", 0)
-        
+
         descriptions = {
             0: "Despejado",
             1: "Mayormente despejado", 2: "Parcialmente nublado", 3: "Cubierto",
@@ -54,7 +54,7 @@ def get_weather_keyless(city: str) -> str:
             95: "Tormenta eléctrica", 96: "Tormenta con granizo ligero", 99: "Tormenta con granizo fuerte"
         }
         desc = descriptions.get(weathercode, "Desconocido")
-        
+
         return (
             f"Weather in {name}, {country} (Free Open-Meteo):\n"
             f"  Condition: {desc}\n"
@@ -62,6 +62,7 @@ def get_weather_keyless(city: str) -> str:
             f"  Wind speed: {wind_speed} km/h"
         )
     except Exception as e:
+        print(f"[Weather Open-Meteo error] {e}")
         return f"Weather service error: {str(e)}"
 
 
@@ -99,7 +100,10 @@ def get_weather(city: str) -> str:
         if response.status_code == 404:
             return f"City '{city}' not found. Please check the spelling."
 
-        response.raise_for_status()
+        if not response.ok:
+            print(f"[Weather] OpenWeatherMap error {response.status_code}, falling back to Open-Meteo.")
+            return get_weather_keyless(city)
+
         data = response.json()
 
         name = data.get("name", city)
@@ -122,8 +126,11 @@ def get_weather(city: str) -> str:
         )
 
     except requests.exceptions.Timeout:
-        return "Weather service timed out. Please try again."
+        print("[Weather] OpenWeatherMap timeout, falling back to Open-Meteo.")
+        return get_weather_keyless(city)
     except requests.exceptions.RequestException as e:
-        return f"Weather API error: {str(e)}"
+        print(f"[Weather] OpenWeatherMap request error: {e}, falling back to Open-Meteo.")
+        return get_weather_keyless(city)
     except Exception as e:
-        return f"Unexpected error fetching weather: {str(e)}"
+        print(f"[Weather] Unexpected error: {e}, falling back to Open-Meteo.")
+        return get_weather_keyless(city)
