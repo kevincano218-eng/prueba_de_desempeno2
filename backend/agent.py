@@ -92,7 +92,7 @@ def _build_agent(rag_context: str = "") -> AgentExecutor:
         tools=TOOLS,
         verbose=True,
         handle_parsing_errors=True,
-        max_iterations=5,
+        max_iterations=3,
         return_intermediate_steps=True,
     )
 

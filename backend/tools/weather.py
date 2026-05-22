@@ -12,12 +12,60 @@ import requests
 from langchain.tools import tool
 
 
+_weather_cache: dict = {}
+
+def _get_cached_or_fetch(city: str, lat: float, lon: float, name: str, country: str) -> str:
+    """Fetch weather with a simple cache to avoid rate limiting."""
+    now = __import__('time').time()
+    cached = _weather_cache.get(city)
+    if cached and now - cached["time"] < 120:
+        return cached["result"]
+
+    weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true"
+    w_resp = requests.get(weather_url, timeout=8)
+    w_data = w_resp.json()
+
+    if w_resp.status_code == 429:
+        msg = "Weather service is temporarily unavailable due to high demand. Please try again in a few minutes."
+        _weather_cache[city] = {"result": msg, "time": now}
+        return msg
+
+    w_resp.raise_for_status()
+
+    current = w_data.get("current_weather", {})
+    temp = current.get("temperature", "N/A")
+    wind_speed = current.get("windspeed", "N/A")
+    weathercode = current.get("weathercode", 0)
+
+    descriptions = {
+        0: "Despejado", 1: "Mayormente despejado", 2: "Parcialmente nublado", 3: "Cubierto",
+        45: "Niebla", 48: "Niebla de escarcha",
+        51: "Llovizna ligera", 53: "Llovizna moderada", 55: "Llovizna densa",
+        61: "Lluvia ligera", 63: "Lluvia moderada", 65: "Lluvia fuerte",
+        71: "Nieve ligera", 73: "Nieve moderada", 75: "Nieve fuerte", 77: "Granos de nieve",
+        80: "Lloviznas ligeras", 81: "Lloviznas moderadas", 82: "Lloviznas violentas",
+        85: "Chubascos de nieve ligeros", 86: "Chubascos de nieve fuertes",
+        95: "Tormenta eléctrica", 96: "Tormenta con granizo ligero", 99: "Tormenta con granizo fuerte"
+    }
+    desc = descriptions.get(weathercode, "Desconocido")
+
+    result = (
+        f"Weather in {name}, {country} (Free Open-Meteo):\n"
+        f"  Condition: {desc}\n"
+        f"  Temperature: {temp}°C\n"
+        f"  Wind speed: {wind_speed} km/h"
+    )
+    _weather_cache[city] = {"result": result, "time": now}
+    return result
+
+
 def get_weather_keyless(city: str) -> str:
     """Fetch weather information from Open-Meteo keyless API."""
     try:
-        # Step 1: Geocoding
         geocode_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&language=es&format=json"
         geo_resp = requests.get(geocode_url, timeout=8)
+        if geo_resp.status_code == 429:
+            return "Weather service is temporarily unavailable due to high demand. Please try again in a few minutes."
         geo_resp.raise_for_status()
         geo_data = geo_resp.json()
 
@@ -27,43 +75,14 @@ def get_weather_keyless(city: str) -> str:
         loc = geo_data["results"][0]
         lat = loc["latitude"]
         lon = loc["longitude"]
-        name = loc.get("name", city)
-        country = loc.get("country", "")
+        geo_name = loc.get("name", city)
+        geo_country = loc.get("country", "")
 
-        # Step 2: Get current weather
-        weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true"
-        w_resp = requests.get(weather_url, timeout=8)
-        w_resp.raise_for_status()
-        w_data = w_resp.json()
+        return _get_cached_or_fetch(city, lat, lon, geo_name, geo_country)
 
-        current = w_data.get("current_weather", {})
-        temp = current.get("temperature", "N/A")
-        wind_speed = current.get("windspeed", "N/A")
-        weathercode = current.get("weathercode", 0)
-
-        descriptions = {
-            0: "Despejado",
-            1: "Mayormente despejado", 2: "Parcialmente nublado", 3: "Cubierto",
-            45: "Niebla", 48: "Niebla de escarcha",
-            51: "Llovizna ligera", 53: "Llovizna moderada", 55: "Llovizna densa",
-            61: "Lluvia ligera", 63: "Lluvia moderada", 65: "Lluvia fuerte",
-            71: "Nieve ligera", 73: "Nieve moderada", 75: "Nieve fuerte",
-            77: "Granos de nieve",
-            80: "Lloviznas ligeras", 81: "Lloviznas moderadas", 82: "Lloviznas violentas",
-            85: "Chubascos de nieve ligeros", 86: "Chubascos de nieve fuertes",
-            95: "Tormenta eléctrica", 96: "Tormenta con granizo ligero", 99: "Tormenta con granizo fuerte"
-        }
-        desc = descriptions.get(weathercode, "Desconocido")
-
-        return (
-            f"Weather in {name}, {country} (Free Open-Meteo):\n"
-            f"  Condition: {desc}\n"
-            f"  Temperature: {temp}°C\n"
-            f"  Wind speed: {wind_speed} km/h"
-        )
     except Exception as e:
         print(f"[Weather Open-Meteo error] {e}")
-        return f"Weather service error: {str(e)}"
+        return "Weather service is temporarily unavailable. Please try again later."
 
 
 @tool
